@@ -1,8 +1,14 @@
-import { Body, ClassSerializerInterceptor, Controller, Post, SerializeOptions, UseInterceptors } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Post, SerializeOptions, UseGuards, UseInterceptors } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
 import { CreateUserDto } from '../auth/create-user-dto';
 import { LoginUserDto } from '../auth/login-user-dto';
 import { AuthService } from './auth.service';
+import JwtAuthenticationGuard from './jwt-authentication.guard';
+import { JwtStrategy } from './jwt.strategy';
+import { LocalAuthenticationGuard } from './local-authentication.guard';
+import RoleGuard from './role.guard';
 
 @Controller('auth')
 // @SerializeOptions({excludePrefixes: ['password']}) 
@@ -13,10 +19,15 @@ export class AuthController {
 
     @Post('register')
     async register(@Body() createUserDto: CreateUserDto): Promise<User>{
+        console.log(createUserDto)
         return this.authService.register(createUserDto);
     }
 
     @Post('login')
+    // @UseGuards(LocalAuthenticationGuard)
+    // @UseGuards(AuthGuard())
+    @UseGuards(RoleGuard(Role.Admin))
+    @UseGuards(JwtAuthenticationGuard)
     async login(@Body() loginUserDto: LoginUserDto ): Promise<{accessToken: string}>{
         return await this.authService.login(loginUserDto);
     }

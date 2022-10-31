@@ -23,6 +23,9 @@ export class AuthService {
         }
 
         const user = new User();
+        if(createUserDto.role){
+            user.role= createUserDto.role
+        }
         user.username = createUserDto.username;
         user.salt = salt;
         user.password = await this.hashPassword(createUserDto.password, salt);

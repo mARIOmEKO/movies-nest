@@ -15,7 +15,6 @@ export class CreateUserDto{
     @IsString()
     readonly retypePassword: string;
 
-    // @IsEnum({type: 'enum'})
-    
+    @IsEnum(Role)
     readonly role: Role;
 }
