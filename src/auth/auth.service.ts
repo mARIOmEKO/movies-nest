@@ -28,12 +28,14 @@ export class AuthService {
         }
         user.username = createUserDto.username;
         user.salt = salt;
+        user.email = createUserDto.email;
         user.password = await this.hashPassword(createUserDto.password, salt);
         try{
            return await this.userRepository.save(user);
             } catch (error){
-                if(error.code == 23505){ //duplicate username
-                    throw new ConflictException('Username already exists')
+                if(error.code == 23505){ //duplicate username or email
+                    // console.log(error)
+                    throw new ConflictException(error.detail)  //print the duplicate error for the certain field
                     }
                 throw new InternalServerErrorException();
                 }

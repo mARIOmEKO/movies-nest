@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { Exclude } from "class-transformer";
 import { userInfo } from "os";
 import { Role } from "./role.enum";
+import { IsEmail } from "class-validator";
 
 @Entity()
 export class User extends BaseEntity {
@@ -13,6 +14,9 @@ export class User extends BaseEntity {
 
     @Column({unique:true})
     username: string;
+
+    @Column({unique: true})
+    email: string;
 
     @Column()
     @Exclude()
