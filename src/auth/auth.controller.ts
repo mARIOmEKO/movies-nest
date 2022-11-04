@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, Post, SerializeOptions, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Post, Res, SerializeOptions, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
@@ -9,6 +9,7 @@ import JwtAuthenticationGuard from './jwt-authentication.guard';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalAuthenticationGuard } from './local-authentication.guard';
 import RoleGuard from './role.guard';
+import { Response } from 'express';
 
 @Controller('auth')
 // @SerializeOptions({excludePrefixes: ['password']}) 
@@ -30,5 +31,7 @@ export class AuthController {
     async login(@Body() loginUserDto: LoginUserDto ): Promise<{accessToken: string}>{
         return await this.authService.login(loginUserDto);
     }
+
+  
 
 }

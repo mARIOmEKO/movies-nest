@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { ResetModule } from './reset/reset.module';
 @Module({
   imports: [
     DatabaseModule,
@@ -26,7 +27,7 @@ import { UserModule } from './user/user.module';
     autoLoadEntities: true,
     synchronize: true,
   }), 
-  DatabaseModule, AuthModule, UserModule,],
+  DatabaseModule, AuthModule, UserModule, ResetModule,],
   controllers: [AppController],
   providers: [AppService,
   {

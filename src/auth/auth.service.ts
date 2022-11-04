@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, Req } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../auth/create-user-dto';
@@ -7,6 +7,7 @@ import { JwtPayload } from '../auth/jwt-payload-interface';
 import { JwtService } from '@nestjs/jwt';
 import { LoginUserDto } from '../auth/login-user-dto';
 import { User } from 'src/user/users.entity';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -52,7 +53,6 @@ export class AuthService {
         return {accessToken}
     }
 
-
     private async hashPassword(password: string, salt: string) : Promise<string>{
         return bcrypt.hash(password,salt)
     }
@@ -65,5 +65,9 @@ export class AuthService {
 
         return null;
 
+    }
+
+    async update( id: number, data){
+        return await this.userRepository.update(id,data)
     }
 }
