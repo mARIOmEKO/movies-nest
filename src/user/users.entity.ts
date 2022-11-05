@@ -1,11 +1,12 @@
 import { Prop, Schema } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { BaseEntity, Column, Entity, ManyToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import * as bcrypt from 'bcrypt';
 import { Exclude } from "class-transformer";
 import { userInfo } from "os";
 import { Role } from "./role.enum";
 import { IsEmail } from "class-validator";
+import { Movies } from "src/movies/movies.entity";
 
 @Entity()
 export class User extends BaseEntity {
@@ -30,8 +31,15 @@ export class User extends BaseEntity {
         enum: Role,
         default: Role.User
     })
+
     @Exclude()
     role: Role;
+
+    @ManyToMany(type => Movies, movies => movies.watchedBy, { eager: false })
+    moviesWatched: Movies[];
+
+    @ManyToMany(type => Movies, movies => movies.wishlistedBy, { eager: false })
+    moviesWishlisted: Movies[];
     
 
     async validateUserPassword(password: string): Promise<boolean>{

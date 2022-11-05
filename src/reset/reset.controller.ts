@@ -31,7 +31,7 @@ export class ResetController {
         const mail = {
             to: email,
             subject: 'Password Reset',
-            from: 'marioo.meko@gmail.com', // Change to your verified sender
+            from: 'marioo.meko@gmail.com', 
             text: 'Your email for the password reset',
             html: `Click <a href="${url}>here</a> to reset your password!`
 

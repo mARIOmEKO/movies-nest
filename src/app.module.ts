@@ -8,6 +8,7 @@ import { APP_PIPE } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ResetModule } from './reset/reset.module';
+import { MoviesModule } from './movies/movies.module';
 @Module({
   imports: [
     DatabaseModule,
@@ -27,7 +28,7 @@ import { ResetModule } from './reset/reset.module';
     autoLoadEntities: true,
     synchronize: true,
   }), 
-  DatabaseModule, AuthModule, UserModule, ResetModule,],
+  DatabaseModule, AuthModule, UserModule, ResetModule, MoviesModule,],
   controllers: [AppController],
   providers: [AppService,
   {
