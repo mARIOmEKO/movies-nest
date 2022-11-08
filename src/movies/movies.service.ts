@@ -5,6 +5,8 @@ import { NotFoundError } from 'rxjs';
 import { LocalAuthenticationGuard } from 'src/auth/local-authentication.guard';
 import { User } from 'src/user/users.entity';
 import { Repository } from 'typeorm';
+import { AddMovieDto } from './dto/add-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movies } from './movies.entity';
 
 @Injectable()
@@ -14,20 +16,39 @@ export class MoviesService {
         private readonly moviesRepository: Repository<Movies>
     ){} 
 
+    async addMovie(addMovie: AddMovieDto){
+        const movie = new Movies()
+        movie.title = addMovie.title;
+        movie.description = addMovie.description;
+        movie.rating = addMovie.rating;
+        
+        return await this.moviesRepository.save(movie);
+    }
+
     async getAllMovies(){
         return await this.moviesRepository.find()
     }
-    async getMovieById(id: number){
-        return await this.moviesRepository.findOne({where: {id}})
+    async getMovieById(id: number): Promise<Movies>{
+        const movie = await this.moviesRepository.findOne({where: {id}})
+        if(!movie)
+            throw new NotFoundException('Movie not found')
+
+        return movie;
+
     }
 
     async getMoviesWatchedByUser(user: User){
         return await this.moviesRepository.findBy({userIdWatched: user.id.toString()})
     }
 
-    async getMoviesWishlistedByUser(user:User){
-        
+    async updateMovie(updateMovieDto: UpdateMovieDto, id: number){
+        const updatedMovie = await this.moviesRepository.update(id,{...updateMovieDto})
+        if (updatedMovie.affected === 0)
+            throw new NotFoundException('Movie not found')
+        return this.getMovieById(id)
+    }
 
+    async getMoviesWishlistedByUser(user:User){
         return await this.moviesRepository.findBy({userIdWishlisted: user.id.toString()})
     }
 

@@ -13,7 +13,7 @@ export class Movies{
     description: string;
 
     @Column()
-    rating: number;
+    rating: string;
 
     @ManyToMany(type => User, user => user.moviesWatched, { eager: true })
     @JoinTable()

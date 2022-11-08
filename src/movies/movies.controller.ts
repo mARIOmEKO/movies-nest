@@ -1,7 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import RoleGuard from 'src/auth/role.guard';
 import { GetUser } from 'src/user/get-user-decorator';
+import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
+import { AddMovieDto } from './dto/add-movie.dto';
+import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MoviesService } from './movies.service';
 
 @Controller('movies')
@@ -11,6 +15,13 @@ export class MoviesController {
         private readonly moviesService: MoviesService
     ){}
     
+    @Post()
+    @UseGuards(RoleGuard(Role.Admin))
+    async addMovie(@Body() addMovie:AddMovieDto){
+        return this.moviesService.addMovie(addMovie);
+    }
+
+
     @Get()
     async getAllMovies(){
         return this.moviesService.getAllMovies()
@@ -30,6 +41,15 @@ export class MoviesController {
     @Get('/moviesWishlisted')
     async getMoviesWishlistedByUser(@GetUser() user: User){
         return await this.moviesService.getMoviesWishlistedByUser(user)
+    }
+
+    @Patch(':id')
+    @UseGuards(RoleGuard(Role.Admin))
+    async updateMovie(
+        @Param('id', ParseIntPipe) id:number,
+        @Body() updateMovieDto: UpdateMovieDto,
+    ){
+        return await this.moviesService.updateMovie(updateMovieDto,id)
     }
 
     @Post('watch/:id')
