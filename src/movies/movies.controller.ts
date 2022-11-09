@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import RoleGuard from 'src/auth/role.guard';
 import { GetUser } from 'src/user/get-user-decorator';
 import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
 import { AddMovieDto } from './dto/add-movie.dto';
+import { GetMoviesFilterDto } from './dto/get-movies-filter.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MoviesService } from './movies.service';
 
@@ -23,8 +24,13 @@ export class MoviesController {
 
 
     @Get()
-    async getAllMovies(){
-        return this.moviesService.getAllMovies()
+    getAllMovies(
+        @Query() filter: GetMoviesFilterDto,
+    ){
+        return this.moviesService.getAllMovieQueryPaginatedFiltered(filter,{
+        total: true,
+        currentPage: filter.page,
+        limit: 5})
     }
     @Get('movie/:id')
     async getMovieById(
@@ -33,14 +39,14 @@ export class MoviesController {
         return await this.moviesService.getMovieById(id);
     }
 
-    @Get('/moviesWatched')
+    @Get('watched')
     async getMoviesWatchedByUser(@GetUser() user: User){
         return await this.moviesService.getMoviesWatchedByUser(user)
     }
 
-    @Get('/moviesWishlisted')
-    async getMoviesWishlistedByUser(@GetUser() user: User){
-        return await this.moviesService.getMoviesWishlistedByUser(user)
+    @Get('wishlisted')
+     getMoviesWishlistedByUser(@GetUser() user: User){
+        return  this.moviesService.getMoviesWishlistedByUser(user)
     }
 
     @Patch(':id')

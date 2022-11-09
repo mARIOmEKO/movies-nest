@@ -1,5 +1,6 @@
 import { User } from "src/user/users.entity";
 import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { PagiantionResult } from "./pagination/paginator";
 
 @Entity()
 export class Movies{
@@ -28,5 +29,6 @@ export class Movies{
     @Column("text", { array: true , default:[]})
     userIdWishlisted: string[];
 
-
 }
+
+export type PaginatedMovie = PagiantionResult<Movies>;

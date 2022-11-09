@@ -1,13 +1,15 @@
 import { ConflictException, Injectable, NotFoundException, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { string } from 'joi';
-import { NotFoundError } from 'rxjs';
+import { async, NotFoundError } from 'rxjs';
 import { LocalAuthenticationGuard } from 'src/auth/local-authentication.guard';
 import { User } from 'src/user/users.entity';
-import { Repository } from 'typeorm';
+import { DeleteResult, Like, Repository, SelectQueryBuilder } from 'typeorm';
 import { AddMovieDto } from './dto/add-movie.dto';
+import { GetMoviesFilterDto } from './dto/get-movies-filter.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { Movies } from './movies.entity';
+import { Movies, PaginatedMovie } from './movies.entity';
+import { paginate, PaginateOptions } from './pagination/paginator';
 
 @Injectable()
 export class MoviesService {
@@ -17,17 +19,28 @@ export class MoviesService {
     ){} 
 
     async addMovie(addMovie: AddMovieDto){
-        const movie = new Movies()
-        movie.title = addMovie.title;
-        movie.description = addMovie.description;
-        movie.rating = addMovie.rating;
-        
-        return await this.moviesRepository.save(movie);
+        return await this.moviesRepository.save({...addMovie});
     }
 
-    async getAllMovies(){
-        return await this.moviesRepository.find()
+    public getAllMoviesQuery(){
+        return this.moviesRepository.createQueryBuilder('m')
+        .orderBy('m.id', 'DESC')
     }
+
+    public async getAllMoviesQueryFiltered(filter: GetMoviesFilterDto){
+        const {search} = filter
+        if(search){
+            return await this.getAllMoviesQuery().andWhere('(m.title LIKE :search OR m.description LIKE :search)', {search: `%${search}%`})
+        }
+        else return this.getAllMoviesQuery()
+    }
+
+    public async getAllMovieQueryPaginatedFiltered(filter:GetMoviesFilterDto,paginateOptions: PaginateOptions): Promise<PaginatedMovie>{
+        return await paginate(await this.getAllMoviesQueryFiltered(filter),paginateOptions)
+    }
+
+    
+    
     async getMovieById(id: number): Promise<Movies>{
         const movie = await this.moviesRepository.findOne({where: {id}})
         if(!movie)
@@ -38,7 +51,10 @@ export class MoviesService {
     }
 
     async getMoviesWatchedByUser(user: User){
-        return await this.moviesRepository.findBy({userIdWatched: user.id.toString()})
+        // return await this.moviesRepository.findBy({userIdWatched: user.id.toString()})
+        return   this.getAllMoviesQuery()
+        .where("m.userIdWatched @> ARRAY[:userId]", {userId: user.id.toString()})
+        .getMany()
     }
 
     async updateMovie(updateMovieDto: UpdateMovieDto, id: number){
@@ -48,8 +64,11 @@ export class MoviesService {
         return this.getMovieById(id)
     }
 
-    async getMoviesWishlistedByUser(user:User){
-        return await this.moviesRepository.findBy({userIdWishlisted: user.id.toString()})
+      public async getMoviesWishlistedByUser(user:User) {
+        // return await this.moviesRepository.findBy({userIdWishlisted: user.id.toString()})
+        return   this.getAllMoviesQuery()
+        .where("m.userIdWishlisted @> ARRAY[:userId]", {userId: user.id.toString()})
+        .getMany()
     }
 
     async watchMovie(user:User, id:number){
@@ -88,6 +107,13 @@ export class MoviesService {
         return movie;
     }
 
+    public async deleteEvent(id: number) : Promise<DeleteResult>{
+        return await this.moviesRepository
+        .createQueryBuilder('m')
+        .delete()
+        .where('id = :id',{id})
+        .execute();
+    }
     
       removeUser (arr, attr, value){
         var i = arr.length;
