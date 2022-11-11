@@ -26,8 +26,9 @@ export class MoviesController {
     @Get()
     getAllMovies(
         @Query() filter: GetMoviesFilterDto,
+        @GetUser() user: User
     ){
-        return this.moviesService.getAllMovieQueryPaginatedFiltered(filter,{
+        return this.moviesService.getAllMovieQueryPaginatedFiltered(user,filter,{
         total: true,
         currentPage: filter.page,
         limit: 5})
@@ -35,8 +36,9 @@ export class MoviesController {
     @Get('movie/:id')
     async getMovieById(
         @Param('id', ParseIntPipe) id:number,
+        @GetUser() user:User,
     ){
-        return await this.moviesService.getMovieById(id);
+        return await this.moviesService.getMovieById(user,id);
     }
 
     @Get('watched')
@@ -54,8 +56,9 @@ export class MoviesController {
     async updateMovie(
         @Param('id', ParseIntPipe) id:number,
         @Body() updateMovieDto: UpdateMovieDto,
+        @GetUser() user: User,
     ){
-        return await this.moviesService.updateMovie(updateMovieDto,id)
+        return await this.moviesService.updateMovie(user,updateMovieDto,id)
     }
 
     @Post('watch/:id')
