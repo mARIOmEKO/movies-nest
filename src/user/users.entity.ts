@@ -1,6 +1,6 @@
 import { Prop, Schema } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { BaseEntity, Column, Entity, ManyToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { BaseEntity, Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, Unique } from "typeorm";
 import * as bcrypt from 'bcrypt';
 import { Exclude } from "class-transformer";
 import { userInfo } from "os";
@@ -35,10 +35,12 @@ export class User extends BaseEntity {
     @Exclude()
     role: Role;
 
-    @ManyToMany(type => Movies, movies => movies.watchedBy, { eager: false })
+    @ManyToMany(type => Movies, movies => movies.watchedBy, { eager: true })
+    @JoinTable()
     moviesWatched: Movies[];
 
-    @ManyToMany(type => Movies, movies => movies.wishlistedBy, { eager: false })
+    @ManyToMany(type => Movies, movies => movies.wishlistedBy, { eager: true })
+    @JoinTable()
     moviesWishlisted: Movies[];
     
 

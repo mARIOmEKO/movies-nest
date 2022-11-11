@@ -16,14 +16,12 @@ export class Movies{
     @Column()
     rating: string;
 
-    @ManyToMany(type => User, user => user.moviesWatched, { eager: true })
-    @JoinTable()
+    @ManyToMany(type => User, user => user.moviesWatched, { eager: false })
     watchedBy: User[]
     @Column("text", { array: true , default:[]})
     userIdWatched: string[];
 
-    @ManyToMany(type => User, user => user.moviesWatched, { eager: true })
-    @JoinTable()
+    @ManyToMany(type => User, user => user.moviesWatched, { eager: false })
     wishlistedBy: User[]; 
 
     @Column("text", { array: true , default:[]})

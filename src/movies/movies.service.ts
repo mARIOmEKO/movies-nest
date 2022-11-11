@@ -15,7 +15,9 @@ import { paginate, PaginateOptions } from './pagination/paginator';
 export class MoviesService {
     constructor(
         @InjectRepository(Movies)
-        private readonly moviesRepository: Repository<Movies>
+        private readonly moviesRepository: Repository<Movies>,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
     ){} 
 
     async addMovie(addMovie: AddMovieDto){
@@ -31,6 +33,7 @@ export class MoviesService {
         const {search} = filter
         if(search){
             return await this.getAllMoviesQuery().andWhere('(m.title LIKE :search OR m.description LIKE :search)', {search: `%${search}%`})
+            
         }
         else return this.getAllMoviesQuery()
     }
@@ -42,7 +45,7 @@ export class MoviesService {
     
     
     async getMovieById(id: number): Promise<Movies>{
-        const movie = await this.moviesRepository.findOne({where: {id}})
+        const movie = await this.moviesRepository.findOne({where: {id},select:['id','description','rating','title']})
         if(!movie)
             throw new NotFoundException('Movie not found')
 
@@ -73,20 +76,25 @@ export class MoviesService {
 
     async watchMovie(user:User, id:number){
         const movie = await this.moviesRepository.findOne({where: {id: id}})
+        console.log(user)
+        // this.removeUser(user.moviesWishlisted, 'id' , id )
+
         if(!movie)
             throw new NotFoundException('Movie not found')
    
-        if(movie.userIdWatched.includes(user.id.toString()))
-            throw new ConflictException('U have already watched this movie')
+        // if(movie.userIdWatched.includes(user.id.toString()))
+        //     throw new ConflictException('U have already watched this movie')
 
         if(movie.userIdWishlisted.includes(user.id.toString())){
             this.removeUserIdWatchlisted(movie.userIdWishlisted, user.id.toString())
-            this.removeUser(movie.wishlistedBy, 'id' , user.id )
+            this.removeUser(user.moviesWishlisted, 'id' , id )
             console.log('movie removed from watchlist, added to watched')
         }
-        movie.userIdWatched.push(user.id.toString())
-        movie.watchedBy.push(user)
-        await this.moviesRepository.save(movie)
+        // movie.userIdWatched.push(user.id.toString())
+        // movie.watchedBy.push(user)
+        user.moviesWatched.push(movie)
+        // await this.userRepository.save(user)
+        // await this.moviesRepository.save(movie)
         return movie;
     }
 
@@ -102,8 +110,10 @@ export class MoviesService {
             throw new ConflictException('U have already watched this movie')
         
         movie.userIdWishlisted.push(user.id.toString())
-        movie.wishlistedBy.push(user)
+        // movie.wishlistedBy.push(user)
         await this.moviesRepository.save(movie)
+        user.moviesWishlisted.push(movie)
+        await this.userRepository.save(user)
         return movie;
     }
 
