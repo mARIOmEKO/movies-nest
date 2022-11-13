@@ -35,10 +35,10 @@ export class User extends BaseEntity {
     @Exclude()
     role: Role;
 
-    @ManyToMany(type => Movies, movies => movies.watchedBy, { eager: false })
+    @ManyToMany(type => Movies, movies => movies.watchedBy, { eager: false,onDelete:'CASCADE' })
     moviesWatched: Movies[];
 
-    @ManyToMany(type => Movies, movies => movies.wishlistedBy, { eager: false })
+    @ManyToMany(type => Movies, movies => movies.wishlistedBy, { eager: false,onDelete:'CASCADE' })
     moviesWishlisted: Movies[];
     
 

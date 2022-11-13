@@ -46,10 +46,12 @@ export class MoviesService {
     
     
     async getMovieById(user: User,id: number): Promise<Movies>{
-        return await this.getAllMoviesQuery(user)
+        const query= await this.getAllMoviesQuery(user)
         .where("m.id = :id", {id})
-        .select(normalUser)
-        .getOne()
+        if(user.role == Role.User)
+        query.select(normalUser)
+        
+        return query.getOne()
         // const movie = await this.moviesRepository.findOne({where: {id}})
         // if(!movie)
         //     throw new NotFoundException('Movie not found')
@@ -66,10 +68,19 @@ export class MoviesService {
     }
 
     async updateMovie(user:User,updateMovieDto: UpdateMovieDto, id: number){
-        const updatedMovie = await this.moviesRepository.update(id,{...updateMovieDto})
-        if (updatedMovie.affected === 0)
+        const updatedMovie = await this.moviesRepository.createQueryBuilder()
+        .update(Movies)
+        .set({...updateMovieDto})
+        .where("id = :id",{id})
+        .execute() 
+
+        if(updatedMovie.affected === 0)
             throw new NotFoundException('Movie not found')
         return this.getMovieById(user,id)
+        // const updatedMovie = await this.moviesRepository.update(id,{...updateMovieDto})
+        // if (updatedMovie.affected === 0)
+        //     throw new NotFoundException('Movie not found')
+        // return this.getMovieById(user,id)
     }
 
       public async getMoviesWishlistedByUser(user:User) {
@@ -115,10 +126,16 @@ export class MoviesService {
         return movie;
     }
 
-    public async deleteEvent(id: number) : Promise<DeleteResult>{
+    public async deleteMovie(user: User,id: number) : Promise<DeleteResult>{
+        // const movie= await this.getMovieById(user,id)
+        // await this.moviesRepository.delete(movie.watchedBy)
+        // await this.moviesRepository.delete(movie.wishlistedBy)
+        // await this.moviesRepository.save(movie)
+        
         return await this.moviesRepository
-        .createQueryBuilder('m')
+        .createQueryBuilder()
         .delete()
+        .from(Movies)
         .where('id = :id',{id})
         .execute();
     }

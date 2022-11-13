@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import RoleGuard from 'src/auth/role.guard';
 import { GetUser } from 'src/user/get-user-decorator';
@@ -79,5 +79,13 @@ export class MoviesController {
         return await this.moviesService.addMovieToWatchlist(user,id)
     }
 
+    @Delete(':id')
+    @UseGuards(RoleGuard(Role.Admin))
+    async deleteMovie(
+        @GetUser() user:User,
+        @Param('id', ParseIntPipe) id:number,
+    ){
+        return await this.moviesService.deleteMovie(user,id)
+    }
     
 }
