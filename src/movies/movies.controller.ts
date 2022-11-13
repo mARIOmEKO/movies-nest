@@ -27,12 +27,18 @@ export class MoviesController {
     getAllMovies(
         @Query() filter: GetMoviesFilterDto,
         @GetUser() user: User
-    ){
-        return this.moviesService.getAllMovieQueryPaginatedFiltered(user,filter,{
-        total: true,
-        currentPage: filter.page,
-        limit: 5})
+        ){
+            return this.moviesService.getAllMovieQueryPaginatedFiltered(user,filter,{
+                total: true,
+                currentPage: filter.page,
+                limit: 5})
+            }
+        
+    @Get('watched')
+    async getMoviesWatchedByUser(@GetUser() user: User){
+        return await this.moviesService.getMoviesWatchedByUser(user)
     }
+    
     @Get('movie/:id')
     async getMovieById(
         @Param('id', ParseIntPipe) id:number,
@@ -41,10 +47,6 @@ export class MoviesController {
         return await this.moviesService.getMovieById(user,id);
     }
 
-    @Get('watched')
-    async getMoviesWatchedByUser(@GetUser() user: User){
-        return await this.moviesService.getMoviesWatchedByUser(user)
-    }
 
     @Get('wishlisted')
      getMoviesWishlistedByUser(@GetUser() user: User){
@@ -66,7 +68,6 @@ export class MoviesController {
         @GetUser() user: User,
         @Param('id', ParseIntPipe) id:number,
         ){
-            // return {user, movieId}
         return await this.moviesService.watchMovie(user,id)
     }
 
@@ -75,7 +76,6 @@ export class MoviesController {
         @GetUser() user: User,
         @Param('id', ParseIntPipe) id:number,
         ){
-            // return {user, movieId}
         return await this.moviesService.addMovieToWatchlist(user,id)
     }
 

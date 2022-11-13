@@ -8,7 +8,7 @@ import { AddMovieDto } from './dto/add-movie.dto';
 import { GetMoviesFilterDto } from './dto/get-movies-filter.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movies, PaginatedMovie } from './movies.entity';
-import { paginate, PaginateOptions } from './pagination/paginator';
+import { PagiantionResult, paginate, PaginateOptions } from './pagination/paginator';
 
 @Injectable()
 export class MoviesService {
@@ -25,9 +25,9 @@ export class MoviesService {
     public getAllMoviesQuery(user:User){
         const query = this.moviesRepository.createQueryBuilder('m')
         .orderBy('m.id', 'DESC')
-        if(user.role == Role.User)
-        // query.select(["m.id","m.title", "m.description", "m.rating"])
-        query.select(normalUser)
+        // if(user.role == Role.User)
+        // return query.select(normalUser)
+
         return query
     }
 
@@ -37,7 +37,7 @@ export class MoviesService {
             return await this.getAllMoviesQuery(user).andWhere('(m.title LIKE :search OR m.description LIKE :search)', {search: `%${search}%`})
         }
         else return this.getAllMoviesQuery(user)
-    }
+    }   
 
     public async getAllMovieQueryPaginatedFiltered(user: User,filter:GetMoviesFilterDto,paginateOptions: PaginateOptions): Promise<PaginatedMovie>{
         return await paginate(await this.getAllMoviesQueryFiltered(user,filter),paginateOptions)
@@ -49,7 +49,7 @@ export class MoviesService {
         const query= await this.getAllMoviesQuery(user)
         .where("m.id = :id", {id})
         if(user.role == Role.User)
-        query.select(normalUser)
+        return query.select(normalUser).getOne()
         
         return query.getOne()
         // const movie = await this.moviesRepository.findOne({where: {id}})
@@ -64,6 +64,7 @@ export class MoviesService {
         // return await this.moviesRepository.findBy({userIdWatched: user.id.toString()})
         return   this.getAllMoviesQuery(user)
         .where("m.userIdWatched @> ARRAY[:userId]", {userId: user.id.toString()})
+        .select(normalUser)
         .getMany()
     }
 
@@ -91,7 +92,7 @@ export class MoviesService {
     }
 
     async watchMovie(user:User, id:number){
-        const movie = await this.moviesRepository.findOne({where: {id: id}})
+        const movie = await this.moviesRepository.findOne({where: {id}})
         if(!movie)
             throw new NotFoundException('Movie not found')
    
@@ -106,10 +107,11 @@ export class MoviesService {
         movie.userIdWatched.push(user.id.toString())
         movie.watchedBy.push(user)
         await this.moviesRepository.save(movie)
-        return movie;
+        return this.getMovieById(user,id)
+        // return this.moviesRepository.findOne({where: {id},select: ['id','description','title','rating']});
     }
 
-    async addMovieToWatchlist(user:User, id: number){
+    async addMovieToWatchlist(user:User, id: number): Promise<Movies>{
         const movie = await this.moviesRepository.findOne({where: {id: id}})
         if(!movie)
             throw new NotFoundException('Movie not found')
@@ -123,7 +125,8 @@ export class MoviesService {
         movie.userIdWishlisted.push(user.id.toString())
         movie.wishlistedBy.push(user)
         await this.moviesRepository.save(movie)
-        return movie;
+        return this.getMovieById(user,id)
+        // return this.moviesRepository.findOne({where: {id},select: ['id','description','title','rating']});
     }
 
     public async deleteMovie(user: User,id: number) : Promise<DeleteResult>{
