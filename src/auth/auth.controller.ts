@@ -12,9 +12,11 @@ import { Request } from 'express';
 import { RefreshTokenStrategy } from './refreshToken.strategy';
 import { RefreshTokenGuard } from './refreshToken.guard';
 import { GetUser } from 'src/user/get-user-decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 
 @Controller('auth')
+@ApiTags('MOVIES')
 // @SerializeOptions({excludePrefixes: ['password']}) 
 export class AuthController {
     constructor(

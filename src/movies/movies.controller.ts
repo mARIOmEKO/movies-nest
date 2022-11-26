@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags } from '@nestjs/swagger';
 import RoleGuard from 'src/auth/role.guard';
 import { GetUser } from 'src/user/get-user-decorator';
 import { Role } from 'src/user/role.enum';
@@ -11,6 +12,7 @@ import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movies, PaginatedMovie } from './movies.entity';
 import { MoviesService } from './movies.service';
 
+@ApiTags('MOVIES')
 @Controller('movies')
 @UseGuards(AuthGuard())
 export class MoviesController {
