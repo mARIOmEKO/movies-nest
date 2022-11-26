@@ -4,10 +4,11 @@ import { Role } from "src/user/role.enum";
 import { JwtStrategy } from "./jwt.strategy";
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import JwtAuthenticationGuard from "./jwt-authentication.guard";
+// import { LocalAuthenticationGuard } from "./local-authentication.guard";
 
 
 const RoleGuard = (role: Role): Type<CanActivate> => {
-  class RoleGuardMixin extends JwtAuthenticationGuard {
+  class RoleGuardMixin extends JwtAuthenticationGuard{
     async canActivate(context: ExecutionContext) {
       await super.canActivate(context);
  

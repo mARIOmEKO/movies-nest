@@ -1,6 +1,6 @@
-import { ConflictException, Injectable, NotFoundException, UseGuards } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, NotFoundException, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LocalAuthenticationGuard } from 'src/auth/local-authentication.guard';
+import { query } from 'express';
 import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
 import { DeleteResult, Like, Repository, SelectQueryBuilder } from 'typeorm';
@@ -36,7 +36,7 @@ export class MoviesService {
         if(search){
             return await this.getAllMoviesQuery(user).andWhere('(m.title LIKE :search OR m.description LIKE :search)', {search: `%${search}%`})
         }
-        else return this.getAllMoviesQuery(user)
+        else return await this.getAllMoviesQuery(user)
     }   
 
     public async getAllMovieQueryPaginatedFiltered(user: User,filter:GetMoviesFilterDto,paginateOptions: PaginateOptions): Promise<PaginatedMovie>{
@@ -60,15 +60,18 @@ export class MoviesService {
 
     }
 
-    async getMoviesWatchedByUser(user: User){
+      async getMoviesWatchedByUser(user: User,filter:GetMoviesFilterDto) {
         // return await this.moviesRepository.findBy({userIdWatched: user.id.toString()})
-        return   this.getAllMoviesQuery(user)
-        .where("m.userIdWatched @> ARRAY[:userId]", {userId: user.id.toString()})
+        return (await this.getAllMoviesQueryFiltered(user, filter))
+        .andWhere("m.userIdWatched @> ARRAY[:userId]", {userId: user.id.toString()})
         .select(normalUser)
-        .getMany()
     }
 
-    async updateMovie(user:User,updateMovieDto: UpdateMovieDto, id: number){
+    async getMoviesWatchedByUserPaginated(user:User,filter:GetMoviesFilterDto,paginateOptions: PaginateOptions): Promise<PaginatedMovie>{
+        return await paginate((await this.getMoviesWatchedByUser(user,filter)),paginateOptions)
+    }
+
+    async updateMovie(user:User,updateMovieDto: UpdateMovieDto, id: number) : Promise<Movies>{
         const updatedMovie = await this.moviesRepository.createQueryBuilder()
         .update(Movies)
         .set({...updateMovieDto})
@@ -84,14 +87,27 @@ export class MoviesService {
         // return this.getMovieById(user,id)
     }
 
-      public async getMoviesWishlistedByUser(user:User) {
+      public async getMoviesWishlistedByUser(user:User,filter: GetMoviesFilterDto) {
         // return await this.moviesRepository.findBy({userIdWishlisted: user.id.toString()})
-        return   this.getAllMoviesQuery(user)
+        
+        return (await this.getAllMoviesQueryFiltered(user, filter))
         .where("m.userIdWishlisted @> ARRAY[:userId]", {userId: user.id.toString()})
-        .getMany()
+        .select(normalUser)
+      
     }
 
-    async watchMovie(user:User, id:number){
+    async getMoviesWatchlistedByUserPagiated(user: User,filter: GetMoviesFilterDto, paginateOptions: PaginateOptions): Promise<PaginatedMovie>{
+        try{return await paginate((await this.getMoviesWishlistedByUser(user,filter)),paginateOptions)}
+        catch(err){
+            throw new HttpException({
+                status: HttpStatus.FORBIDDEN,
+                error: err
+            }, HttpStatus.FORBIDDEN
+            )
+        }
+    }
+
+    async watchMovie(user:User, id:number) : Promise<Movies>{
         const movie = await this.moviesRepository.findOne({where: {id}})
         if(!movie)
             throw new NotFoundException('Movie not found')

@@ -31,9 +31,12 @@ export class User extends BaseEntity {
         enum: Role,
         default: Role.User
     })
-
     @Exclude()
     role: Role;
+
+    @Column({nullable: true,})
+    refreshToken: string;
+
 
     @ManyToMany(type => Movies, movies => movies.watchedBy, { eager: false,onDelete:'CASCADE' })
     moviesWatched: Movies[];
@@ -45,5 +48,10 @@ export class User extends BaseEntity {
     async validateUserPassword(password: string): Promise<boolean>{
         const hash = await bcrypt.hash(password,this.salt);
         return hash === this.password;
+    }
+
+    async validateRefreshToken(RT: string): Promise<boolean>{
+        const hash = await bcrypt.hash(RT, this.salt)
+        return hash === this.refreshToken
     }
 }

@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, Req } from '@nestjs/common';
+import { ConflictException, ForbiddenException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException, Req } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../auth/create-user-dto';
@@ -17,7 +17,7 @@ export class AuthService {
         private jwtService: JwtService,
     ){}
 
-    async register(createUserDto: CreateUserDto) : Promise<User>{
+    async register(createUserDto: CreateUserDto) {
         const salt = await bcrypt.genSalt();
         if (createUserDto.password != createUserDto.retypePassword){
             throw new HttpException ('password does not match',HttpStatus.CONFLICT)
@@ -32,7 +32,7 @@ export class AuthService {
         user.email = createUserDto.email;
         user.password = await this.hashPassword(createUserDto.password, salt);
         try{
-           return await this.userRepository.save(user);
+            await this.userRepository.save(user);
             } catch (error){
                 if(error.code == 23505){ //duplicate username or email
                     // console.log(error)
@@ -40,6 +40,9 @@ export class AuthService {
                     }
                 throw new InternalServerErrorException();
                 }
+            const tokens = await this.getTokens(user.id, user.username);
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+        return tokens;
     }
 
     async login (loginUserDto: LoginUserDto): Promise<{accessToken:string}>{
@@ -48,9 +51,13 @@ export class AuthService {
         if (!username)
         throw new NotFoundException('Credentials does not match sorry bro');
 
-        const payload : JwtPayload= {username};
-        const accessToken = await this.jwtService.sign(payload);
-        return {accessToken}
+        const user= await this.userRepository.findOne({where: {username:loginUserDto.username}})
+        // const payload : JwtPayload= {username};
+        // const accessToken = await this.jwtService.sign(payload);
+        // return {accessToken}
+        const tokens = await this.getTokens(user.id, user.username);
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+        return tokens;
     }
 
     private async hashPassword(password: string, salt: string) : Promise<string>{
@@ -70,4 +77,57 @@ export class AuthService {
     async update( id: number, data){
         return await this.userRepository.update(id,data)
     }
+
+    async updateRefreshToken(userId: number, refreshToken: string) {
+        const user= await this.userRepository.findOne({where:{ id:userId}})
+        
+        const hashedRefreshToken = await bcrypt.hash(refreshToken,user.salt);
+        await this.userRepository.update(userId, {
+          refreshToken: hashedRefreshToken,
+        });
+        return user;
+      }
+    
+      async getTokens(userId: number, username: string) {
+        const [accessToken, refreshToken] = await Promise.all([
+          this.jwtService.signAsync(
+            {
+              sub: userId,
+              username,
+            },
+            {
+              secret: 'secret',
+              expiresIn: '15m',
+            },
+          ),
+          this.jwtService.signAsync(
+            {
+              sub: userId,
+              username,
+            },
+            {
+              secret: 'secrett',
+              expiresIn: '7d',
+            },
+          ),
+        ]);
+    
+        return {
+          accessToken,
+          refreshToken,
+        };
+      }
+
+      async refreshTokens(userId: number, refreshToken: string) {
+        const user = await this.userRepository.findOne({where: {id: userId}});
+        console.log(user)
+        if (!user || !user.refreshToken)
+          throw new ForbiddenException('Access Denied o vllai im');
+        const refreshTokenMatches = await user.validateRefreshToken(refreshToken);
+        if (!refreshTokenMatches) throw new ForbiddenException('Access Denied o vlla');
+        const tokens = await this.getTokens(user.id, user.username);
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+        return tokens;
+      }
+    
 }

@@ -1,4 +1,4 @@
-import { Body, ClassSerializerInterceptor, Controller, Post, Res, SerializeOptions, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, ClassSerializerInterceptor, Controller, Get, Post, Req, Res, SerializeOptions, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
@@ -7,9 +7,12 @@ import { LoginUserDto } from '../auth/login-user-dto';
 import { AuthService } from './auth.service';
 import JwtAuthenticationGuard from './jwt-authentication.guard';
 import { JwtStrategy } from './jwt.strategy';
-import { LocalAuthenticationGuard } from './local-authentication.guard';
 import RoleGuard from './role.guard';
-import { Response } from 'express';
+import { Request } from 'express';
+import { RefreshTokenStrategy } from './refreshToken.strategy';
+import { RefreshTokenGuard } from './refreshToken.guard';
+import { GetUser } from 'src/user/get-user-decorator';
+
 
 @Controller('auth')
 // @SerializeOptions({excludePrefixes: ['password']}) 
@@ -18,8 +21,18 @@ export class AuthController {
         private readonly authService: AuthService,
     ){}
 
+    
+    @UseGuards(RefreshTokenGuard)
+    @Get('refresh')
+    refreshTokens(@Req() req: Request) {
+        const userId = req.user['sub'];
+  const refreshToken = req.user['refreshToken'];
+
+        return this.authService.refreshTokens(+userId, refreshToken);
+    }
+
     @Post('register')
-    async register(@Body() createUserDto: CreateUserDto): Promise<User>{
+    async register(@Body() createUserDto: CreateUserDto){
         console.log(createUserDto)
         return this.authService.register(createUserDto);
     }

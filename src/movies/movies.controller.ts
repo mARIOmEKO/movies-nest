@@ -4,9 +4,11 @@ import RoleGuard from 'src/auth/role.guard';
 import { GetUser } from 'src/user/get-user-decorator';
 import { Role } from 'src/user/role.enum';
 import { User } from 'src/user/users.entity';
+import { DeleteResult } from 'typeorm';
 import { AddMovieDto } from './dto/add-movie.dto';
 import { GetMoviesFilterDto } from './dto/get-movies-filter.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { Movies, PaginatedMovie } from './movies.entity';
 import { MoviesService } from './movies.service';
 
 @Controller('movies')
@@ -18,7 +20,7 @@ export class MoviesController {
     
     @Post()
     @UseGuards(RoleGuard(Role.Admin))
-    async addMovie(@Body() addMovie:AddMovieDto){
+    async addMovie(@Body() addMovie:AddMovieDto) :Promise<Movies>{
         return this.moviesService.addMovie(addMovie);
     }
 
@@ -27,7 +29,7 @@ export class MoviesController {
     getAllMovies(
         @Query() filter: GetMoviesFilterDto,
         @GetUser() user: User
-        ){
+        ):Promise<PaginatedMovie>{
             return this.moviesService.getAllMovieQueryPaginatedFiltered(user,filter,{
                 total: true,
                 currentPage: filter.page,
@@ -35,22 +37,32 @@ export class MoviesController {
             }
         
     @Get('watched')
-    async getMoviesWatchedByUser(@GetUser() user: User){
-        return await this.moviesService.getMoviesWatchedByUser(user)
+    async getMoviesWatchedByUser(@GetUser() user: User,
+    @Query() filter:GetMoviesFilterDto) :Promise<PaginatedMovie>{
+        return await this.moviesService.getMoviesWatchedByUserPaginated(user,filter,{
+            total:true,
+            currentPage: filter.page,
+            limit: 5
+        })
     }
     
     @Get('movie/:id')
     async getMovieById(
         @Param('id', ParseIntPipe) id:number,
         @GetUser() user:User,
-    ){
+    ):Promise<Movies>{
         return await this.moviesService.getMovieById(user,id);
     }
 
 
     @Get('wishlisted')
-     getMoviesWishlistedByUser(@GetUser() user: User){
-        return  this.moviesService.getMoviesWishlistedByUser(user)
+     getMoviesWishlistedByUser(@GetUser() user: User,
+     @Query() filter:GetMoviesFilterDto):Promise<PaginatedMovie>{
+        return  this.moviesService.getMoviesWatchlistedByUserPagiated(user,filter,{
+            total:true,
+            currentPage: filter.page,
+            limit: 5
+        })
     }
 
     @Patch(':id')
@@ -59,7 +71,7 @@ export class MoviesController {
         @Param('id', ParseIntPipe) id:number,
         @Body() updateMovieDto: UpdateMovieDto,
         @GetUser() user: User,
-    ){
+    ):Promise<Movies>{
         return await this.moviesService.updateMovie(user,updateMovieDto,id)
     }
 
@@ -67,7 +79,7 @@ export class MoviesController {
     async watchMovie(
         @GetUser() user: User,
         @Param('id', ParseIntPipe) id:number,
-        ){
+        ):Promise<Movies>{
         return await this.moviesService.watchMovie(user,id)
     }
 
@@ -75,7 +87,7 @@ export class MoviesController {
     async addMovieToWatchlist(
         @GetUser() user: User,
         @Param('id', ParseIntPipe) id:number,
-        ){
+        ):Promise<Movies>{
         return await this.moviesService.addMovieToWatchlist(user,id)
     }
 
@@ -84,7 +96,7 @@ export class MoviesController {
     async deleteMovie(
         @GetUser() user:User,
         @Param('id', ParseIntPipe) id:number,
-    ){
+    ):Promise<DeleteResult>{
         return await this.moviesService.deleteMovie(user,id)
     }
     
