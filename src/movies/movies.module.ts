@@ -15,7 +15,7 @@ import { AuthModule } from 'src/auth/auth.module';
     TypeOrmModule.forFeature([Movies,User]),
     PassportModule.register({defaultStrategy: 'jwt'}),
     JwtModule.register({
-      secret: 'secret' ,
+      secret: process.env.JWT_SECRET ,
       signOptions: {
       expiresIn: 3600,   }})
   ],
