@@ -7,6 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({whitelist:true}))
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
+  
   const options = new DocumentBuilder().setTitle('MovieDB').setDescription('Movies Database').setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api',app, document);

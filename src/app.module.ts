@@ -12,11 +12,7 @@ import { MoviesModule } from './movies/movies.module';
 @Module({
   imports: [
     DatabaseModule,
-    ConfigModule.forRoot({isGlobal: true,
-      // validationSchema: Joi.object({
-      //   DATABASE_HOST: Joi.required(),
-      //   DATABASE_PORT: Joi.number().default(5440),
-      // })
+    ConfigModule.forRoot({isGlobal: true
     }),
     TypeOrmModule.forRoot({
     type: 'postgres',
@@ -26,7 +22,7 @@ import { MoviesModule } from './movies/movies.module';
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE_NAME,
     autoLoadEntities: true,
-    synchronize: true,
+    synchronize: true, //set to false in production
   }), 
   DatabaseModule, AuthModule, UserModule, ResetModule, MoviesModule,],
   controllers: [AppController],
