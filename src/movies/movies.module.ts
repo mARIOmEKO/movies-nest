@@ -8,6 +8,9 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { AuthModule } from 'src/auth/auth.module';
+import * as config from 'config';
+
+// const jwtConfig= config.get('jwt')
 
 @Module({
   imports: [
@@ -15,7 +18,9 @@ import { AuthModule } from 'src/auth/auth.module';
     TypeOrmModule.forFeature([Movies,User]),
     PassportModule.register({defaultStrategy: 'jwt'}),
     JwtModule.register({
-      secret: process.env.JWT_SECRET ,
+      
+      // secret: process.env.JWT_SECRET || jwtConfig.secret,
+      secret: process.env.JWT_SECRET,
       signOptions: {
       expiresIn: 3600,   }})
   ],

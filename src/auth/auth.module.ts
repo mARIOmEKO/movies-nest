@@ -8,6 +8,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { User } from 'src/user/users.entity';
 import { RefreshTokenStrategy } from './refreshToken.strategy';
 import { ConfigModule } from '@nestjs/config';
+import * as config from 'config';
+
+// const jwtConfig= config.get('jwt')
 
 @Module({
   providers: [
@@ -20,8 +23,9 @@ import { ConfigModule } from '@nestjs/config';
     PassportModule.register({defaultStrategy: 'jwt'}),
     ConfigModule.forRoot({isGlobal: true}),
     JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      // secret: process.env.JWT_SECRET || jwtConfig.secret,
       // secret: 'secret' ,
-      secret: process.env.JWT_SECRET ,
       signOptions: {
       expiresIn: 3600,      
     }})],

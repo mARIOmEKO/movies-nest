@@ -5,6 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Repository } from "typeorm";
 import { JwtPayload } from "./jwt-payload-interface";
 import { User } from "../user/users.entity";
+import * as config from 'config';
 import { Role } from "src/user/role.enum";
 
 
@@ -17,7 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy){
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: true, //set to true in production
-            secretOrKey: 'secret',
+            secretOrKey: process.env.JWT_SECRET || config.get('jwt.secret'),
             // secretOrKey: process.env.JWT_SECRET,
         })
     }
